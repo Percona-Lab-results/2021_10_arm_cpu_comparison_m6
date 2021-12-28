@@ -538,7 +538,10 @@ requests_per_dollar <- function(input_dt){
 }
 
 
-efficient_comparison_point_plot <- function(input_dt, facet_threads=FALSE){
+efficient_comparison_point_plot <- function(input_dt, 
+                                            facet_threads=FALSE,
+                                            input_caption=NULL,
+                                            add_logo = FALSE){
   temp_dt <- input_dt
   column_name <- "queries_per_sec"
   temp_dt <- temp_dt[,.(test_run,VM_type,Number_of_threads, "value"=eval(get(column_name)),cpu_amount,price_usd, cpu_type,color)]
@@ -571,20 +574,27 @@ efficient_comparison_point_plot <- function(input_dt, facet_threads=FALSE){
   
   
   
-  x_breaks <- c(10000000, 25000000, 50000000,75000000, 100000000,150000000,
-                200000000, 250000000,300000000,350000000,400000000,450000000,
-                500000000, 550000000,600000000,650000000,700000000,
-                750000000,800000000,850000000, 900000000,950000000, 1000000000,
-                1100000000)
-  y_breaks <- c(10000000, 25000000, 50000000,75000000, 100000000,150000000,
-                200000000, 250000000,300000000,350000000,400000000,450000000,
-                500000000, 550000000,600000000,650000000,700000000,
-                750000000,800000000,850000000, 900000000,950000000,1000000000,
-                1100000000, 1200000000, 1300000000, 1400000000, 1500000000,
-                1600000000, 1700000000, 1800000000, 1900000000, 2000000000,2100000000)
+  x_breaks <- c(10, 25, 50,75, 100,150,
+                200, 250,300,350,400,450,
+                500, 550,600,650,700,
+                750,800,850, 900,950, 1000,
+                1100,1200,1300,1400,1500) * 1000000
+  y_breaks <- c(10, 25, 50,75, 100,150,
+                200, 250,300,350,400,450,
+                500, 550,600,650,700,
+                750,800,850, 900,950,1000,
+                1100, 1200, 1300, 1400, 1500,
+                1600, 1700, 1800, 1900, 2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000) * 1000000
   
   num_thread_levels <- temp_dt$Number_of_threads %>% unique() %>% as.numeric()%>% sort()
   temp_dt$Number_of_threads <- factor(temp_dt$Number_of_threads, levels = num_thread_levels)
+  
+  list_of_ec2 <- temp_dt$VM_type %>% unique() %>% sort() 
+  
+  first_part <- list_of_ec2[1:round(length(list_of_ec2)/2)] %>% paste(collapse = ",")
+  second_part <- list_of_ec2[(round(length(list_of_ec2)/2)+1):length(list_of_ec2)] %>% paste(collapse = ",")
+  caption_generated <- paste("used EC2:",first_part,second_part,input_caption, sep="\n")
+  
   
   result_plot <- ggplot(temp_dt,aes(x=dollar_request,
                      y=approx_qph,
@@ -595,6 +605,7 @@ efficient_comparison_point_plot <- function(input_dt, facet_threads=FALSE){
     labs(title = "CPU types efficient comparison (for MySQL)",
          x="Amount of requests per 1 USD",
          y="Approximate amount of requests per hour",
+         caption = caption_generated,
          size="size:\nConcurrency\namount of threads:",
          color="color:\nCPU type:",
          shape="shape:\nvCPU amount") +
@@ -616,5 +627,80 @@ efficient_comparison_point_plot <- function(input_dt, facet_threads=FALSE){
       facet_wrap(.~factor(Number_of_threads,levels = c(1,2,4,8,16,32,64,128)), scales="free_y")+
       labs(subtitle = "splited by (scenarios) concurrency: amount of threads")
   }
+  
+  if(add_logo){
+    result_plot <- result_plot %>%  add_percona_logo()
+  }
+  
   result_plot
 }
+
+
+
+line_db_plot_universal <- function(input_dt,
+                                   input_title = "",
+                                   input_subtitle="",
+                                   column_name = NULL,
+                                   yaxis_label= NULL,
+                                   input_caption=NULL,
+                                   x_axis_aws = FALSE,
+                                   add_logo = FALSE,
+                                   facet_cpu=TRUE){
+  temp_dt <- input_dt
+  temp_dt <- temp_dt[,.(test_run,VM_type,Number_of_threads, "value"=eval(get(column_name)),cpu_amount,cpu_type,color)]
+  temp_dt <- temp_dt[,.("min"=min(value), "max"=max(value), avg=mean(value)), by=.(VM_type,Number_of_threads, cpu_amount,cpu_type,color)]
+  
+  list_of_threads <- temp_dt$Number_of_threads %>% unique() %>% as.numeric() %>% sort() %>% paste( collapse= ", ")
+  
+  if (is.null(input_subtitle)) {
+    subtitle_generated <- paste("for next concurency threads:", 
+                                "\n",
+                                list_of_threads,
+                                sep="" )
+  } else {
+    subtitle_generated <- input_subtitle
+  }
+  
+  list_of_ec2 <- input_dt$VM_type %>% unique() %>% sort() %>% paste(collapse = ",")
+  
+  caption_generated <- paste("used EC2:",list_of_ec2,input_caption, sep="\n")
+  
+  temp_dt$x_break_label <- temp_dt$VM_type
+  
+  temp_dt[,cpu_amount_2:=paste("vCPU:",cpu_amount)]
+  
+  temp_dt$cpu_amount_2 = factor(temp_dt$cpu_amount_2, levels=c('vCPU: 2','vCPU: 4','vCPU: 8','vCPU: 16','vCPU: 32','vCPU: 48', 'vCPU: 64'))
+  
+  level_order <- temp_dt$Number_of_threads %>% unique() %>% as.numeric() %>% sort()
+  
+  result_plot <- ggplot(temp_dt, aes(x=factor(Number_of_threads,level_order), 
+                                     y=avg,
+                                     color=as.factor(cpu_type), 
+                                     group=as.factor(cpu_type))) +
+    scale_color_manual(values = c("firebrick1","darkgoldenrod1","dodgerblue"))
+  xaxis_label = "concurenncy: amount of threads"
+  fill_title = "CPU type:"
+  
+  
+  result_plot <- result_plot+ geom_line( size=1.3) + geom_point()+
+    scale_y_sqrt(labels=function(x) format(x, big.mark = " ", scientific = FALSE)) +
+    labs(x=xaxis_label,
+         y=yaxis_label,
+         title = input_title,
+         subtitle = subtitle_generated,
+         caption = caption_generated,
+         color =fill_title ) + 
+    theme(axis.text.x = element_text(angle = 15, vjust = 0.9, hjust=1, size=10),
+          axis.text.y = element_text(angle = -45, vjust = 0.9, hjust=1, size=10))
+  
+  if(facet_cpu){
+    result_plot <- result_plot + facet_wrap(.~cpu_amount_2, scales = "free")
+  }
+  if(add_logo){
+    result_plot <- result_plot %>%  add_percona_logo()
+  }
+  
+  result_plot
+}
+
+

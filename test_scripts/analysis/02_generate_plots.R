@@ -21,16 +21,23 @@ tic("picture generation took")
 print("==============================================================")
 back_up_wd <- getwd()
 current_dir <- system("pwd",intern = TRUE)
-current_dir <- "/Users/nikitakricko/Documents/GitHub/2021_10_arm_cpu_comparison_m6a/test_scripts/analysis"
+current_dir <- "/Users/nikitakricko/Documents/GitHub/2021_10_arm_cpu_comparison_m6/test_scripts/analysis"
+setwd(current_dir)
 path_to_save_plots <- paste(current_dir, "/autogen_plots", sep="")
 dir.create(path_to_save_plots)
 setwd(path_to_save_plots)
 print(current_dir)
-# curent_dir <- "/Users/nikitakricko/Documents/GitHub/2021_10_arm_cpu_comparison_c5/test_scripts/analysis"
+# current_dir <- "/Users/nikitakricko/Documents/GitHub/2021_10_arm_cpu_comparison_c5/test_scripts/analysis"
 print("==============================================================")
-path_to_file <- paste(curent_dir,"oltp_sysbench_logs.fst", sep="/")
+path_to_file <- paste(current_dir,"oltp_sysbench_logs.fst", sep="/")
 
 oltp_test_result <- fst::read.fst(path_to_file) %>% as.data.table()
+
+
+condition_list <- c("m6i", "m6g", "m6a")
+oltp_test_result <- oltp_test_result[VM_type %like_in% condition_list]
+# oltp_test_result <- oltp_test_result %>% like_in("VM_type",condition_list)
+
 
 col_list <- c("read" ,"query_exec_other",
               "query_exec_general_statistic_total_number_of_events","latency_ms_min", "latency_ms_avg", "latency_ms_max",
@@ -40,9 +47,11 @@ col_list <- c("read" ,"query_exec_other",
 
 
 
-
 cpuList <- oltp_test_result$cpu_amount %>% unique()
 ec2_types <- oltp_test_result$ec2_type %>% unique()
+
+
+
 
 for(column in col_list){
 
@@ -317,6 +326,10 @@ p_07_efficiency_overview <- efficient_comparison_point_plot(oltp_test_result, fa
 save_plot("07_p_07_efficiency_overview.png", p_07_efficiency_overview)
   
 toc()
+
+
+
+
 
 
 

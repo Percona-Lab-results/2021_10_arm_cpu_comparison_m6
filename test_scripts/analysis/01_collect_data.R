@@ -107,6 +107,39 @@ oltp_test_result[,queries_total:=as.numeric(queries_total)]
 oltp_test_result[,queries_per_sec:=as.numeric(queries_per_sec)]
 
 
+
+path_to_ec2_csv <- "/Users/nikitakricko/Documents/GitHub/2021_10_arm_cpu_comparison_m6a/test_scripts/analysis/aws_ec2_instance_comparison.csv"
+ec2_data_dt_full <- read_csv(path_to_ec2_csv) %>% as.data.table() %>% janitor::clean_names()
+
+ec2_data_dt_short <- ec2_data_dt_full[,.(name,api_name,memory,v_cp_us,physical_processor,clock_speed_g_hz,linux_on_demand_cost)]
+
+ec2_data_dt_short[,VM_type:=api_name]
+ec2_data_dt_short[,memory:=gsub(" GiB","",memory) %>% as.numeric()]
+ec2_data_dt_short[,v_cp_us:=gsub(" vCPUs","",v_cp_us) %>% as.numeric()]
+ec2_data_dt_short[,clock_speed_g_hz:=gsub(" GHz","",clock_speed_g_hz) %>% as.numeric()]
+ec2_data_dt_short[,linux_on_demand_cost:=gsub("\\$| hourly","",linux_on_demand_cost) %>% as.numeric()]
+ec2_data_dt_short[,price_usd:=linux_on_demand_cost]
+
+ec2_data_dt_short$color <- "white"
+ec2_data_dt_short[physical_processor %like% "AMD"]$color <- "firebrick1"
+ec2_data_dt_short[physical_processor %like% "Intel"]$color <- "dodgerblue"
+ec2_data_dt_short[physical_processor %like% "Graviton"]$color <- "darkgoldenrod1"
+ec2_data_dt_short$cpu_type <- "none"
+ec2_data_dt_short[physical_processor %like% "AMD"]$cpu_type <- "AMD"
+ec2_data_dt_short[physical_processor %like% "Intel"]$cpu_type <- "Intel"
+ec2_data_dt_short[physical_processor %like% "Graviton"]$cpu_type <- "Graviton"
+ec2_data_dt_short[,cpu_amount_2:=paste("vCPU:",v_cp_us)]
+ec2_data_dt_short$ec2_type <- "-"
+ec2_data_dt_short[v_cp_us < 16]$ec2_type <- "small"
+ec2_data_dt_short[v_cp_us >= 16]$ec2_type <- "medium"
+ec2_data_dt_short[v_cp_us >= 48]$ec2_type <- "large"
+
+# oltp_test_result <- fst::read.fst("/Users/nikitakricko/Documents/GitHub/2021_10_arm_cpu_comparison_m6a/test_scripts/analysis/oltp_sysbench_logs.fst") %>% as.data.table()
+
+oltp_test_result <- oltp_test_result[ec2_data_dt_short, on="VM_type"][!is.na(test_run)]
+
+oltp_test_result[,"cpu_amount":=v_cp_us]
+
 # slow_ec2 <- c("c6g.large","c6g.xlarge","c6g.2xlarge", "c5.2xlarge", "c5.xlarge","c5.large", "c5a.2xlarge","c5a.xlarge","c5a.large","t4g.medium", "t4g.large","t3.medium", "t3.large", "m6g.large","m6g.xlarge","m6g.2xlarge","m5.large","m5.xlarge","m5.2xlarge","m5a.large","m5a.xlarge","m5a.2xlarge")
 # medium_ec2 <- c("c6g.4xlarge","c5.4xlarge","c5a.4xlarge","m6g.4xlarge","m6g.8xlarge","m5.4xlarge","m5.8xlarge","m5a.4xlarge","m5a.8xlarge")
 # fast_ec2 <- c("c6g.16xlarge","c6g.12xlarge","c5.12xlarge","c5a.16xlarge","c5a.12xlarge","m6g.12xlarge","m6g.16xlarge","m5.12xlarge","m5.16xlarge","m5a.12xlarge","m5a.16xlarge")

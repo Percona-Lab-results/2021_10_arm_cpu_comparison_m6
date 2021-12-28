@@ -73,6 +73,15 @@ get_dt_about_logs <- function(path_to_log_folder){
   big_dt
 }
 
+# like_in <- function(input_dt, input_column, like_in_list){
+#   input_dt[Reduce(`|`, Map(`%like%`, list(get(input_column)), like_in_list))]
+# }
+
+"%like_in%" <- function(vector, pattern_list, ignore.case = TRUE, fixed = FALSE) {
+  pattern <- paste(condition_list, collapse = "|")
+  grepl(pattern, vector, ignore.case = ignore.case, fixed = fixed)
+}
+
 parse_db_log_file <- function(path_db_test_log){
   db_log_lines <- read_lines(path_db_test_log) %>% trimws(.)  %>% as.data.table()
   
