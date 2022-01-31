@@ -20,7 +20,6 @@ require(cowplot)
 print("==============================================================")
 back_up_wd <- getwd()
 current_dir <- system("pwd",intern = TRUE)
-current_dir <- "/Users/nikitakricko/Documents/GitHub/2021_10_arm_cpu_comparison_m6/test_scripts/analysis"
 setwd(current_dir) 
 source("00_functions.R")
 source("00_viz_functions.R")
@@ -67,7 +66,7 @@ p_11 <- get_db_universal(oltp_test_result[ec2_type == "small"],
                          column_name = "queries_per_sec", 
                          yaxis_label = "Amount of queries per second",
                          x_axis_aws = FALSE,
-                         add_logo = FALSE,
+                         add_logo = TRUE,
                          facet_cpu=TRUE)
 save_plot("011_workload_qps_small.png", p_11)
 
@@ -247,7 +246,7 @@ absolute_comparison_AMD_large <- intel_graviton_comparison(oltp_test_result[ec2_
                                        input_subtitle="",
                                        input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
                                        input_relative=FALSE,
-                                       target_comparing_cpu="amd")
+                                       target_comparing_cpu="AMD")
 save_plot("037_absolute_comparison_AMD_large.png", absolute_comparison_AMD_large)
 
 ### absolute comparison overview
@@ -263,6 +262,27 @@ absolute_comparison_overview_amd <- intel_graviton_comparison(oltp_test_result,
                                                   input_relative=FALSE,
                                                   target_comparing_cpu="AMD")
 save_plot("068_absolute_comparison_overview_amd.png", absolute_comparison_overview_amd)
+
+
+relative_comparison_overview_intel_amd <- intel_graviton_comparison(oltp_test_result,
+                                                  input_subtitle="",
+                                                  input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                                  input_relative=TRUE,
+                                                  target_comparing_cpu="intelamd")
+save_plot("0691_relative_comparison_overview_intel_amd.png", relative_comparison_overview_intel_amd)
+
+absolute_comparison_overview_intel_amd <- intel_graviton_comparison(oltp_test_result,
+                                                                    input_subtitle="",
+                                                                    input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                                                    input_relative=FALSE,
+                                                                    target_comparing_cpu="intelamd")
+save_plot("0692_absolute_comparison_overview_intel_amd.png", absolute_comparison_overview_intel_amd)
+
+
+
+
+
+
 
 
 ### requests per_dollar ###########

@@ -1,8 +1,8 @@
 
 locals {
-  # cpu_x86 = setproduct(["m6a.large", "m6a.xlarge", "m6a.2xlarge", "m6a.4xlarge", "m6a.8xlarge","m6a.12xlarge","m6a.16xlarge"], ["gp2"])
-  cpu_x86 = setproduct(["m6i.16xlarge"], ["gp2"])
-  # TODO update list of lcients
+  cpu_x86 = setproduct(["m6a.large", "m6a.xlarge", "m6a.2xlarge", "m6a.4xlarge", "m6a.8xlarge","m6a.12xlarge","m6a.16xlarge", "m6i.large","m6i.xlarge", "m6i.2xlarge", "m6i.4xlarge", "m6i.8xlarge","m6i.12xlarge","m6i.16xlarge" ], ["gp2"])
+    # cpu_x86 = setproduct(["m6a.large", "m6i.large"], ["gp2"])
+#
 }
 
 resource "aws_instance" "MySQLx86" {
@@ -23,8 +23,8 @@ resource "aws_instance" "MySQLx86" {
     volume_size = "200"
   }
 
-  vpc_security_group_ids = [aws_security_group.percona_lab_sg_c5.id]
-  iam_instance_profile   = aws_iam_instance_profile.sysbench_profile_c5.name
+  vpc_security_group_ids = [aws_security_group.percona_lab_sg_m6.id]
+  iam_instance_profile   = aws_iam_instance_profile.sysbench_profile_m6.name
   user_data_base64 = "${data.template_cloudinit_config.config_x86.rendered}"
 
   tags = {
@@ -38,8 +38,8 @@ resource "aws_instance" "MySQLx86" {
 
   depends_on = [
     aws_s3_bucket.sysbench_result,
-    aws_iam_role.tf_s3_role_c5,
-    aws_iam_instance_profile.sysbench_profile_c5,
+    aws_iam_role.tf_s3_role_m6,
+    aws_iam_instance_profile.sysbench_profile_m6,
     aws_instance.ubuntu_pmm_server
   ]
 }

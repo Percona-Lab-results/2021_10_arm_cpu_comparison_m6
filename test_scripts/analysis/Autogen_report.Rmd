@@ -1,0 +1,419 @@
+---
+title: "OLTP_CPU_TEST"
+output:
+  html_document:
+    toc: true
+    theme: united
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(jsonlite)
+library(data.table)
+library(tidyverse)
+library(ggplot2)
+library(rjson)
+library(rlist)
+library(future)
+library(furrr)
+library(parallel)
+library(foreach)
+library(doParallel)
+library(tictoc)
+library(plotly)
+require(magick)
+require(cowplot)
+library(lubridate)
+library(fst)
+library(scales)
+library(patchwork)
+
+options(digits.secs = 3)  
+options(scipen = 999)
+
+source("00_functions.R")
+source("00_viz_functions.R")
+```
+
+
+```{r, read_the_data, results='asis', echo=FALSE, message = FALSE, echo = FALSE, warning=FALSE}
+
+curent_dir <- system("pwd",intern = TRUE)
+path_to_file <- paste(curent_dir,"oltp_sysbench_logs.fst", sep="/")
+oltp_test_result <- fst::read.fst(path_to_file) %>% as.data.table()
+```
+
+
+
+
+# Auto generated report and pictures
+
+## Talbe with results
+```{R, datatable, results='asis', echo=FALSE, message = FALSE, echo = FALSE, warning=FALSE}
+# knitr::kable(oltp_test_result, caption = "EC2 summary")
+DT::datatable(oltp_test_result, 
+              class = 'cell-border stripe',
+              caption = 'Table 1: Raw results for the experiment',
+              extensions = "Buttons", 
+            options = list(paging = TRUE,
+                           scrollX=TRUE, 
+                           searching = TRUE,
+                           ordering = TRUE,
+                           dom = 'Bfrtip',
+                           buttons = c('copy', 'csv', 'excel'),
+                           pageLength=5, 
+                           lengthMenu=c(3,5,10) ))
+```
+
+
+
+
+## Manual prepared graphs
+
+
+### THROUGHPUT (QURIES PER SECOND)
+```{R, manual_plots_QPS,results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%" }
+p_03 <- get_db_universal(oltp_test_result,
+                         input_title = "Queries per second",
+                         column_name = "queries_per_sec",
+                         yaxis_label = "Amount of queries per second",
+                         input_subtitle = "( more is better )",
+                         input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                         x_axis_aws = FALSE,
+                         add_logo = TRUE,
+                         facet_cpu=TRUE)
+# 
+print(p_03)
+```
+
+#### Queries per second details
+<details><summary style='background-color: #EEEEEE;color: #333333; padding: 2px 6px 2px 6px; border-top: 1px solid #CCCCCC; border-right: 1px solid #333333; border-bottom: 1px solid #333333; border-left: 1px solid #CCCCCC;'>Details:  Queries per second details</summary>
+
+```{r queries_per_second_details, results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%"} 
+p_02_s <- get_db_universal(oltp_test_result[ec2_type == "small"],
+                           input_title = "Queries per second (vCPU: 2, 4,8)",
+                           column_name = "queries_per_sec",
+                           yaxis_label = "Amount of queries per second",
+                           input_subtitle = "( more is better )",
+                           input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                           x_axis_aws = FALSE,
+                           add_logo = TRUE,
+                           facet_cpu=TRUE)
+
+print(p_02_s)
+
+
+p_02_m <- get_db_universal(oltp_test_result[ec2_type == "medium"],
+                           input_title = "Queries per second (vCPU: 16, 32)",
+                           column_name = "queries_per_sec",
+                           yaxis_label = "Amount of queries per second",
+                           input_subtitle = "( more is better )",
+                           input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                           x_axis_aws = FALSE,
+                           add_logo = TRUE,
+                           facet_cpu=TRUE)
+
+print(p_02_m)
+
+
+p_02_f <- get_db_universal(oltp_test_result[ec2_type == "large"],
+                           input_title = "Queries per second (vCPU: 48, 64)",
+                           column_name = "queries_per_sec",
+                           yaxis_label = "Amount of queries per second",
+                           input_subtitle = "( more is better )",
+                           input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                           x_axis_aws = FALSE,
+                           add_logo = TRUE,
+                           facet_cpu=TRUE)
+print(p_02_f)
+```
+</details>
+
+
+
+### LATENCIES (95th Percentile)
+```{R, manual_plots_latencies,results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%" }
+p95_O <- get_db_universal(oltp_test_result,
+                        input_title = "Latency (95th percentile) during test",
+                        column_name = "latency_ms_95th_percentile",
+                        input_subtitle = "( less is better )",
+                        input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                        yaxis_label = "Latency 95 percentile (ms)",
+                        x_axis_aws = FALSE,
+                        add_logo = TRUE,
+                        facet_cpu=TRUE)
+print(p95_O)
+```
+
+ 
+#### latencies details
+<details><summary style='background-color: #EEEEEE;color: #333333; padding: 2px 6px 2px 6px; border-top: 1px solid #CCCCCC; border-right: 1px solid #333333; border-bottom: 1px solid #333333; border-left: 1px solid #CCCCCC;'>Details:  Latencies details</summary>
+
+```{r Latencies_details, results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%"} 
+
+p95_s <- get_db_universal(oltp_test_result[ec2_type == "small"],
+                        input_title = "Latency (95th percentile) during test",
+                        column_name = "latency_ms_95th_percentile",
+                        input_subtitle = "( less is better )",
+                        input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                        yaxis_label = "Latency 95 percentile (ms)",
+                        x_axis_aws = FALSE,
+                        add_logo = TRUE,
+                        facet_cpu=TRUE)
+print(p95_s)
+
+
+p95_m <- get_db_universal(oltp_test_result[ec2_type == "medium"],
+                        input_title = "Latency (95th percentile) during test",
+                        column_name = "latency_ms_95th_percentile",
+                        input_subtitle = "( less is better )",
+                        input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                        yaxis_label = "Latency 95 percentile (ms)",
+                        x_axis_aws = FALSE,
+                        add_logo = TRUE,
+                        facet_cpu=TRUE)
+print(p95_m)
+
+
+p95_f <- get_db_universal(oltp_test_result[ec2_type == "large"],
+                        input_title = "Latency (95th percentile) during test",
+                        column_name = "latency_ms_95th_percentile",
+                        input_subtitle = "( less is better )",
+                        input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                        yaxis_label = "Latency 95 percentile (ms)",
+                        x_axis_aws = FALSE,
+                        add_logo = TRUE,
+                        facet_cpu=TRUE)
+
+print(p95_f)
+```
+</details>
+
+
+
+
+### ABSOLUTE COMPARISON
+```{R, manual_plots_absolute_comparison,results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%" }
+abs_com_overview <- intel_graviton_comparison(oltp_test_result,
+                                              input_subtitle="",
+                                              input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                              input_relative=FALSE)
+print(abs_com_overview)
+```
+
+
+
+
+#### Absolute comparison details
+<details><summary style='background-color: #EEEEEE;color: #333333; padding: 2px 6px 2px 6px; border-top: 1px solid #CCCCCC; border-right: 1px solid #333333; border-bottom: 1px solid #333333; border-left: 1px solid #CCCCCC;'>Details:  Absolute comparison</summary>
+```{r absolute_comparison_details, results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%"} 
+
+abs_com_s <- intel_graviton_comparison(oltp_test_result[ec2_type == "small"],
+                                       input_subtitle="",
+                                       input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                       input_relative=FALSE)
+print(abs_com_s)
+
+
+abs_com_m <- intel_graviton_comparison(oltp_test_result[ec2_type == "medium"],
+                                       input_subtitle="",
+                                       input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                       input_relative=FALSE)
+print(abs_com_m)
+
+
+abs_com_f <- intel_graviton_comparison(oltp_test_result[ec2_type == "large"],
+                                       input_subtitle="",
+                                       input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                       input_relative=FALSE)
+print(abs_com_f)
+
+
+```
+</details>
+
+
+
+
+
+### RELATIVE COMPARISON
+```{R, manual_plots_relative_comparison,results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%" }
+rel_com_overview <- intel_graviton_comparison(oltp_test_result,
+                                              input_subtitle="",
+                                              input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                              input_relative=TRUE)
+print(rel_com_overview)
+```
+
+
+#### Relative comparison details
+<details><summary style='background-color: #EEEEEE;color: #333333; padding: 2px 6px 2px 6px; border-top: 1px solid #CCCCCC; border-right: 1px solid #333333; border-bottom: 1px solid #333333; border-left: 1px solid #CCCCCC;'>Details:  Relative comparison</summary>
+```{r manual_plots_relative_comparison_details, results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%"} 
+
+
+rel_com_s <- intel_graviton_comparison(oltp_test_result[ec2_type == "small"],
+                                              input_subtitle="",
+                                              input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                              input_relative=TRUE)
+print(rel_com_s)
+
+
+rel_com_m <- intel_graviton_comparison(oltp_test_result[ec2_type == "medium"],
+                                              input_subtitle="",
+                                              input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                              input_relative=TRUE)
+print(rel_com_m)
+
+
+rel_com_f <- intel_graviton_comparison(oltp_test_result[ec2_type == "large"],
+                                              input_subtitle="",
+                                              input_caption= "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                              input_relative=TRUE)
+print(rel_com_f)
+
+```
+</details>
+
+
+
+
+### REQUEST PER DOLLAR
+```{R, manual_plots_RPD,results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%" }
+p_05_rpd_overview <- requests_per_dollar(oltp_test_result)
+print(p_05_rpd_overview)
+```
+
+
+#### Request per dollar details
+<details><summary style='background-color: #EEEEEE;color: #333333; padding: 2px 6px 2px 6px; border-top: 1px solid #CCCCCC; border-right: 1px solid #333333; border-bottom: 1px solid #333333; border-left: 1px solid #CCCCCC;'>Details:  Request per dollar</summary>
+```{r RPD_details, results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%"} 
+
+# save_plot("05_p_05_rpd_overview.png", p_05_rpd_overview)
+p_05_rpd_s <- requests_per_dollar(oltp_test_result[ec2_type == "small"])
+print(p_05_rpd_s)
+
+p_05_rpd_m <- requests_per_dollar(oltp_test_result[ec2_type == "medium"])
+print(p_05_rpd_m)
+
+p_05_rpd_f <- requests_per_dollar(oltp_test_result[ec2_type == "large"])
+print(p_05_rpd_f)
+
+
+```
+</details>
+
+
+
+
+### REQUEST PER HOUR
+```{R, manual_plots_RPH,results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%" }
+p_06_rph_overview <- requests_ph(oltp_test_result)
+print(p_06_rph_overview)
+```
+
+
+#### Request per hour details
+<details><summary style='background-color: #EEEEEE;color: #333333; padding: 2px 6px 2px 6px; border-top: 1px solid #CCCCCC; border-right: 1px solid #333333; border-bottom: 1px solid #333333; border-left: 1px solid #CCCCCC;'>Details:  Request per hour</summary>
+```{r RPH_details, results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%"} 
+
+
+
+p_06_rph_s <- requests_ph(oltp_test_result[ec2_type == "small"])
+print(p_06_rph_s)
+
+p_06_rph_m <- requests_ph(oltp_test_result[ec2_type == "medium"])
+print(p_06_rph_m)
+
+p_06_rph_f <- requests_ph(oltp_test_result[ec2_type == "large"])
+print(p_06_rph_f)
+
+
+
+```
+</details>
+
+
+### EFFICIENCY OVERVIEW
+```{R, manual_plots_efficiency,results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%" }
+p_07_efficiency_overview <- efficient_comparison_point_plot(oltp_test_result, facet_threads=FALSE)
+print(p_07_efficiency_overview)
+```
+
+
+
+## Autogenerated graphs
+
+```{r, auto_gen_pics, results='asis', out.extra='style="background-color: #9ecff7; padding:10px; display: inline-block;"',  echo=FALSE,                                                                                 message = FALSE, echo = FALSE, warning=FALSE, fig.width=unit(16,"cm"), fig.height=unit(10,"cm"), out.width = "100%"}
+
+col_list <- c("read" ,"query_exec_other",
+              "query_exec_general_statistic_total_number_of_events","latency_ms_min", "latency_ms_avg", "latency_ms_max",
+              "latency_ms_95th_percentile", "latency_ms_sum", "latency_ms_events_avg", "latency_ms_events_stddev",
+              "latency_ms_execution_time_avg","latency_ms_execution_time_stddev", "sql_stat_transactions_total",
+              "sql_stat_transactions_per_sec","queries_total", "queries_per_sec" )
+
+
+cpuList <- oltp_test_result$cpu_amount %>% unique()
+ec2_types <- oltp_test_result$ec2_type %>% unique()
+
+
+for(column in col_list){
+cat("\n")
+cat("\n")
+cat("<input type=\"button\" onclick=\"location.href='#top';\" value=\"Back to top\" />")
+cat("\n")
+cat("\n")
+
+cat("### ","Section: ",  column, "\n")
+
+  autogenerated_title <- paste(column,"autogenerated", sep = "_")
+
+  auto_plot <- get_db_universal(oltp_test_result,
+                           input_title = autogenerated_title,
+                           column_name = column,
+                           yaxis_label = column,
+                           input_subtitle = "",
+                           input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                           x_axis_aws = FALSE,
+                           add_logo = TRUE,
+                           facet_cpu=TRUE)
+
+  print(auto_plot)
+  cat("\n")
+  cat("\n")
+
+  # cat("<details><summary style='background-color:#F1EC5E;font-size:35px;'>","more details: ", column, "</summary>")
+  cat("<details><summary style='background-color: #EEEEEE;color: #333333; padding: 2px 6px 2px 6px; border-top: 1px solid #CCCCCC; border-right: 1px solid #333333; border-bottom: 1px solid #333333; border-left: 1px solid #CCCCCC;'>","more details: ", column, "</summary>")
+  for(cpu_num in cpuList){
+    autogenerated_title <- paste(column, "for", cpu_num,"cpu","autogenerated", sep = "_")
+
+    auto_plot <- get_db_universal(oltp_test_result[cpu_amount == cpu_num],
+                                  input_title = autogenerated_title,
+                                  column_name = column,
+                                  yaxis_label = column,
+                                  input_subtitle = "",
+                                  input_caption = "sysbench: 1.0.18, MySQL: 8.0.26-0",
+                                  x_axis_aws = FALSE,
+                                  add_logo = TRUE,
+                                  facet_cpu=TRUE)
+
+    print(auto_plot)
+    cat("\n")
+    cat("\n")
+  }
+
+  cat("</details>")
+  cat("</details>")
+  cat("\n")
+  cat("\n")
+  cat("<br>")
+  cat("<br>")
+  cat("<br>")
+}
+
+```
+
+
+```{r percona_logo, echo=FALSE, fig.cap="build with Percona", out.width = '12%',style='background-color=#F1EC5E;font-size=10px;'}
+knitr::include_graphics("https://avatars.githubusercontent.com/u/1683025?s=200&v=4")
+```

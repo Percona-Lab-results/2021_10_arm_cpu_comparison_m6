@@ -1,7 +1,22 @@
 library(optparse)
 library(data.table)
+options(scipen = 999)
 
 
+
+compres_numbers <- function(number) { 
+  div <- findInterval(as.numeric(gsub("\\,", "", number)), 
+                      c(0, 1e3, 1e6, 1e9, 1e12) )  # modify this if negative numbers are possible
+  paste(round( as.numeric(gsub("\\,","",number))/10^(3*(div-1)), 2), 
+        c("","K","M","B","T")[div] )
+}
+
+compres_numbers_title <- function(number) { 
+  div <- findInterval(as.numeric(gsub("\\,", "", number)), 
+                      c(0, 1e3, 1e6, 1e9, 1e12) )  # modify this if negative numbers are possible
+  paste(round( as.numeric(gsub("\\,","",number))/10^(3*(div-1)), 2), 
+        c("","thouthands","Millions","Billions","Trillions")[div] )
+}
 
 get_dt_about_logs <- function(path_to_log_folder){
   tic("collecting data took:")

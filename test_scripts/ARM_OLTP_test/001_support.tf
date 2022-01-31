@@ -15,13 +15,13 @@ resource "aws_s3_bucket" "sysbench_result" {
   }
 }
 
-resource "aws_iam_instance_profile" "sysbench_profile_c5" {
-  name = "s3_sysbench_c5"
-  role = aws_iam_role.tf_s3_role_c5.name
+resource "aws_iam_instance_profile" "sysbench_profile_m6" {
+  name = "s3_sysbench_m6"
+  role = aws_iam_role.tf_s3_role_m6.name
 }
 
-resource "aws_iam_role" "tf_s3_role_c5" {
-  name = "tf_s3_role_c5"
+resource "aws_iam_role" "tf_s3_role_m6" {
+  name = "tf_s3_role_m6"
   assume_role_policy = jsonencode({
     Statement = [{
       Action = "sts:AssumeRole"
@@ -37,8 +37,8 @@ resource "aws_iam_role" "tf_s3_role_c5" {
 }
 
 
-resource "aws_security_group" "percona_lab_sg_c5" {
-  name        = "Sysbench Security Group C5"
+resource "aws_security_group" "percona_lab_sg_m6" {
+  name        = "Sysbench Security Group M6"
   description = "percona sysbench testing SecurityGroup"
 
 
