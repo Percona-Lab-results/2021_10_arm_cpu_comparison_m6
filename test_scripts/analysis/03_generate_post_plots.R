@@ -23,7 +23,8 @@ current_dir <- system("pwd",intern = TRUE)
 setwd(current_dir) 
 source("00_functions.R")
 source("00_viz_functions.R")
-path_to_file <- paste(current_dir,"oltp_sysbench_logs.fst", sep="/")
+path_to_file <- "/Users/nikitakricko/Documents/GitHub/2021_10_arm_cpu_comparison_m6/test_scripts/analysis/oltp_sysbench_logs.fst"
+# path_to_file <- paste(current_dir,"oltp_sysbench_logs.fst", sep="/")
 
 oltp_test_result <- fst::read.fst(path_to_file) %>% as.data.table()
 
@@ -39,9 +40,9 @@ print("==============================================================")
 
 
 
-
-condition_list <- c("m6i", "m6g", "m6a")
-oltp_test_result <- oltp_test_result[VM_type %like_in% condition_list]
+# 
+# condition_list <- c("m6i", "m6g", "m6a")
+# oltp_test_result <- oltp_test_result[VM_type %like_in% condition_list]
 
 # col_list <- c("read" ,"query_exec_other",
 #               "query_exec_general_statistic_total_number_of_events","latency_ms_min", "latency_ms_avg", "latency_ms_max",

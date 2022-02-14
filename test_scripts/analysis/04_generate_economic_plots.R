@@ -20,6 +20,7 @@ library(ggh4x)
 print("==============================================================")
 back_up_wd <- getwd()
 current_dir <- system("pwd",intern = TRUE)
+current_dir <- "/Users/nikitakricko/Documents/GitHub/2021_10_arm_cpu_comparison_m6/test_scripts/analysis"
 setwd(current_dir) 
 source("00_functions.R")
 source("00_viz_functions.R")
@@ -65,10 +66,9 @@ save_plot("072_top_10_scenarios_econ_e.png", p_72_all_scenarios_econ_e)
 
 p_73_all_scenarios_econ_e <- top_efficient_lollipop(all_scenarios,sort_by_USD=TRUE)
 save_plot("073_all_scenarios_econ_e.png", p_73_all_scenarios_econ_e)
-save_plot("073_high_all_scenarios_econ_e.png", p_73_all_scenarios_econ_e, input_height=20)
 p_74_all_scenarios_perf_e <- top_efficient_lollipop(all_scenarios,sort_by_USD=FALSE)
 save_plot("074_all_scenarios_perf_e.png", p_74_all_scenarios_perf_e)
-save_plot("074_high_all_scenarios_perf_e.png", p_74_all_scenarios_perf_e, input_height=20)
+
 
 
 p_75_all_scenarios_simplify_econ_e <- top_efficient_lollipop(all_scenarios_simplify,sort_by_USD=TRUE)
@@ -184,7 +184,7 @@ p_15_3_m6_efficiency_overview <- efficient_comparison_point_plot(m6_scenario, fa
 save_plot("15_3_m6_efficiency_overview.png", p_15_3_m6_efficiency_overview)
 
 
-### best price for hourly load 
+### best price for hourly load  - queries per hour
 list_qph_load <- c(500, 1000, 1500, 2000, 2100 ) * 1000000
 
 p_500 <- best_hourly_load_price_barplot(oltp_test_result, list_qph_load[1])
@@ -199,7 +199,7 @@ p_2200 <- best_hourly_load_price_barplot(oltp_test_result, list_qph_load[5])
 save_plot("915_hourly_load_2200m.png", p_2200)
 
 
-### best price for QPS load 
+### best price for queries per second load 
 
 list_qps_load <- c(10, 50,100,250,300,350,400,500) * 1000
 
@@ -210,35 +210,31 @@ p_50 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[2])
 save_plot("922_rps_load_50k.png", p_50)
 p_100 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[3])
 save_plot("923_rps_load_100k.png", p_100)
-# p_250 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[4])
-# save_plot("924_rps_load_250k.png", p_250)
+p_250 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[4])
+save_plot("not_used_92___rps_load_250k.png", p_250)
 p_300 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[5])
 save_plot("924_rps_load_300k.png", p_300)
-# p_350 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[6])
-# save_plot("926_rps_load_350k.png", p_350)
-# p_400 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[7])
-# save_plot("927_rps_load_400k.png", p_400)
+p_350 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[6])
+save_plot("not_used_92___rps_load_350k.png", p_350)
+p_400 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[7])
+save_plot("not_used_92___rps_load_400k.png", p_400)
 p_500 <- best_second_load_price_barplot(oltp_test_result, list_qps_load[8])
 save_plot("925_rps_load_500k.png", p_500)
 
 
-### generate hourly heatmap 
+### generate hourly heatmap - queries per hour
 
 hourly_heat_map <- heatmap_cheapest_for_hourly_load(oltp_test_result)
 save_plot("931_horly_heatmap.png", hourly_heat_map)
-### generate qps heatmap 
 
+### generate qps heatmap  - queries per second
 secondly_heatmap <- heatmap_cheapest_for_second_load(oltp_test_result)
 save_plot("932_secondly_heatmap.png", secondly_heatmap)
 
 
-
+### Create lollipot plots foor scenarios
 c5_scenarios_econ_e <- top_efficient_lollipop(c5_scenario,sort_by_USD=TRUE, limit=20)
 c5_scenarios_perf_e <- top_efficient_lollipop(c5_scenario,sort_by_USD=FALSE, limit=20)
-
-
-
-
 
 m6_scenarios_econ_e <- top_efficient_lollipop(m6_scenario,sort_by_USD=TRUE, limit=20)
 m6_scenarios_perf_e <- top_efficient_lollipop(m6_scenario,sort_by_USD=FALSE, limit=20)
@@ -256,7 +252,7 @@ all_max_load_scenarios_perf_e <- top_efficient_lollipop(all_max_load_test_result
 
 
 
-input_dt <- oltp_test_result[cpu_type == "Intel"]
+input_dt <- oltp_test_result
 temp_dt <- input_dt
 column_name <- "queries_per_sec"
 temp_dt <- temp_dt[,.(test_run,VM_type,Number_of_threads, "value"=eval(get(column_name)),cpu_amount,price_usd, cpu_type,color)]
@@ -361,7 +357,7 @@ save_plot("0511_HL_advantage_relative_bar_plot.png", HL_advantage_relative_bar_p
 HL_advantage_absolute_bar_plot
 save_plot("0512_HL_advantage_absolute_bar_plot.png", HL_advantage_absolute_bar_plot)
 
-### csv for appendix
+### csv for appendix ####
 input_dt <- oltp_test_result[Number_of_threads == cpu_amount]
 temp_dt <- input_dt
 column_name <- "queries_per_sec"
@@ -369,7 +365,15 @@ temp_dt <- temp_dt[,.(test_run,VM_type,Number_of_threads, "value"=eval(get(colum
 temp_dt <- temp_dt[,.("avg_qps"=round(mean(value))), by=.(VM_type,Number_of_threads, cpu_amount,price_usd, cpu_type,color)]
 table_for_csv <- temp_dt[,.(VM_type,Number_of_threads,cpu_amount,avg_qps,price_usd,cpu_type)] %>% setorder(cpu_type,cpu_amount,VM_type)
 
-write_excel_csv(table_for_csv, "post_economical_plots/short_results.xls")
+write_excel_csv(table_for_csv, "short_results.xls")
+
+### save all results to file ####
+temp_dt <- oltp_test_result
+column_name <- "queries_per_sec"
+temp_dt <- temp_dt[,.(test_run,VM_type,Number_of_threads, "value"=eval(get(column_name)),cpu_amount,price_usd, cpu_type,color)]
+temp_dt <- temp_dt[,.("avg_qps"=round(mean(value))), by=.(VM_type,Number_of_threads, cpu_amount,price_usd, cpu_type,color)]
+table_for_csv <- temp_dt[,.(VM_type,Number_of_threads,cpu_amount,avg_qps,price_usd,cpu_type)] %>% setorder(cpu_type,cpu_amount,VM_type)
+write_excel_csv(table_for_csv, "full_results.xls")
 
 
 

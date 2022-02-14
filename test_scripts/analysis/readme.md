@@ -51,12 +51,27 @@ you need add name of your S3 bucket as parameter
 ```bash
 Rscript 01_collect_data.R -s 's3://variables3bucket'
 Rscript 02_generate_plots.R
+
 ```
 
 results will be in `autogen_plots` folder
+
+Generating plots for blog it is required run additional scripts
+
+```bash
+Rscript 03_generate_post_plots.R
+Rscript 04_generate_economic_plots.R
+```
+these scripts will create additional folders (`post_plots` and `post_economical_plots`) and generate multiple pictures there.
+
+Script `Rscript 04_generate_economic_plots.R` will also create 2 files with short and full result for excel:
+`short_results.xls` and `full_results.xls`
+
 
 if you want html report run next script after data collecting:
 
 ```bash
 Rscript -e "rmarkdown::render('Autogen_report.Rmd')"
 ```
+
+It will create html file with multiple graphs
