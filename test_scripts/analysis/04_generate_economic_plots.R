@@ -74,7 +74,7 @@ save_plot("074_all_scenarios_perf_e.png", p_74_all_scenarios_perf_e)
 p_75_all_scenarios_simplify_econ_e <- top_efficient_lollipop(all_scenarios_simplify,sort_by_USD=TRUE)
 save_plot("075_all_scenarios_simplify_econ_e.png", p_75_all_scenarios_simplify_econ_e)
 p_76_all_scenarios_simplify_perf_e <- top_efficient_lollipop(all_scenarios_simplify,sort_by_USD=FALSE)
-save_plot("076_all_scenarios_simplify_perf_e.png", p_76_all_scenarios_simplify_perf_e)
+save_plot("076_all_scenarios_simplify_perf_e.png", p_76_all_scenarios_simplify_perf_e,input_width=8, input_height=6)
 
 p_77_all_scenarios_simplify_HL_econ_e <- top_efficient_lollipop(all_scenarios_simplify_high_load,sort_by_USD=TRUE)
 save_plot("077_all_scenarios_simplify_HL_econ_e.png", p_77_all_scenarios_simplify_HL_econ_e)

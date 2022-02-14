@@ -10,8 +10,8 @@ library(cowplot)
 save_plot <- function(file_path_name,plot_to_save, input_width=16, input_height=9){
   if(!is.null(file_path_name)){
     fileName_to_save <- paste(file_path_name,".png",sep="")
-    ggsave(fileName_to_save,plot_to_save,width = input_width, height = input_height, dpi = 350, units = "in", device='png')
-    print(paste("plot successfully saved:",fileName_to_save))
+    ggsave(fileName_to_save,plot_to_save,width = input_width, height = input_height, dpi = 250, units = "in", device='png')
+    print(paste("plot successfully saved:",getwd(),"/",fileName_to_save))
   }
 }
 
