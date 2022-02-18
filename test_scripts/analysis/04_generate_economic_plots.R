@@ -77,7 +77,7 @@ p_76_all_scenarios_simplify_perf_e <- top_efficient_lollipop(all_scenarios_simpl
 save_plot("076_all_scenarios_simplify_perf_e.png", p_76_all_scenarios_simplify_perf_e,input_width=8, input_height=6)
 
 p_77_all_scenarios_simplify_HL_econ_e <- top_efficient_lollipop(all_scenarios_simplify_high_load,sort_by_USD=TRUE)
-save_plot("077_all_scenarios_simplify_HL_econ_e.png", p_77_all_scenarios_simplify_HL_econ_e)
+save_plot("077_all_scenarios_simplify_HL_econ_e.png", p_77_all_scenarios_simplify_HL_econ_e,input_width=8, input_height=6)
 p_78_all_scenarios_simplify_HL_perf_e <- top_efficient_lollipop(all_scenarios_simplify_high_load,sort_by_USD=FALSE)
 save_plot("078_all_scenarios_simplify_HL_perf_e.png", p_78_all_scenarios_simplify_HL_perf_e)
 
@@ -374,6 +374,106 @@ temp_dt <- temp_dt[,.(test_run,VM_type,Number_of_threads, "value"=eval(get(colum
 temp_dt <- temp_dt[,.("avg_qps"=round(mean(value))), by=.(VM_type,Number_of_threads, cpu_amount,price_usd, cpu_type,color)]
 table_for_csv <- temp_dt[,.(VM_type,Number_of_threads,cpu_amount,avg_qps,price_usd,cpu_type)] %>% setorder(cpu_type,cpu_amount,VM_type)
 write_excel_csv(table_for_csv, "full_results.xls")
+
+
+
+###############################3
+all_equal_test_result
+input_dt <- all_equal_test_result
+temp_dt <- input_dt
+column_name <- "queries_per_sec"
+temp_dt <- temp_dt[,.(test_run,VM_type,Number_of_threads, "value"=eval(get(column_name)),cpu_amount,price_usd, cpu_type,color)]
+temp_dt <- temp_dt[,.("avg_qps"=mean(value)), by=.(VM_type,Number_of_threads, cpu_amount,price_usd, cpu_type,color)]
+temp_dt[,":="("description"=paste("vCPU:",cpu_amount,"_load:",Number_of_threads,"tps", sep="")) ]
+temp_dt[,"approx_qph":=round(avg_qps*3600,0)]
+temp_dt[,price_second:=price_usd/3600]
+temp_dt[,request_price:=price_second/avg_qps]
+temp_dt[,dollar_request:=1/request_price]
+gen_price <- function(input_thouthands,request_price,price_usd){
+  ifelse(request_price*input_thouthands*1000 > price_usd,NA,request_price*input_thouthands*1000)
+}
+temp_dt[,"price_10k":=gen_price(10,request_price,price_usd)]
+temp_dt[,"price_50k":=gen_price(50,request_price,price_usd)]
+temp_dt[,"price_100k":=gen_price(100,request_price,price_usd)]
+temp_dt[,"price_200k":=gen_price(200,request_price,price_usd)]
+temp_dt[,"price_500k":=gen_price(500,request_price,price_usd)]
+temp_dt[,"price_1m":=gen_price(1000,request_price,price_usd)]
+
+
+tdt <- temp_dt[,.(VM_type,cpu_amount,price_usd,cpu_type,avg_qps,approx_qph,dollar_request)]
+
+x_breaks <- round(tdt$price_usd, 1) %>% unique() %>% sort()
+y_breaks <- (round(tdt$approx_qph/100000000)*100000000) %>% unique() %>% sort()
+
+
+
+result_plot <- ggplot(tdt, aes(x=price_usd, 
+                               y=approx_qph, 
+                               color=as.factor(cpu_type),
+                               shape=as.factor(cpu_amount),
+                               label=VM_type)) + 
+  geom_point(size=5, stroke = 3)  +
+  scale_x_log10(breaks=x_breaks) +
+  scale_y_sqrt(breaks=y_breaks,
+               labels=label_number(suffix = " M", scale = 1e-6))  +
+  scale_shape_manual(values=1:nlevels(as.factor(temp_dt$cpu_amount)))+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1),
+        axis.text.y = element_text(angle = -45, vjust = 0.9, hjust=1, size=6)) +
+  scale_color_manual(name = 'color:\nCPU type', 
+                     values =c('Graviton'='darkgoldenrod1',
+                               'Intel'='dodgerblue',
+                               'AMD'='firebrick1'), 
+                     labels = c('Graviton','Intel', "AMD"))  +
+  labs(title = "CPU types efficient comparison (for MySQL)",
+       x="price for 1 hour USD",
+       y="Approximate amount of requests per hour",
+       caption = "DUMMY",
+       color="color:\nCPU type:",
+       shape="shape:\nvCPU amount")  +
+  geom_text_repel(fill = "white", xlim = c(-Inf, Inf), ylim = c(-Inf, Inf))
+
+p_11_without_labels <- result_plot
+save_plot("011_cpu_efficiency_per_1_usd.png", p_11_without_labels)
+p_12_with_labels <- result_plot +
+  geom_text_repel(fill = "white", xlim = c(-Inf, Inf), ylim = c(-Inf, Inf))
+save_plot("012_cpu_efficiency_per_1_usd_with_labels.png", p_12_with_labels)
+
+#### EFFICIENCY PER DOLLAR
+
+x_breaks <- round(tdt$price_usd, 1) %>% unique() %>% sort()
+y_breaks <- (round(tdt$dollar_request/10000000)*10000000) %>% unique() %>% sort()
+
+
+result_plot <- ggplot(tdt, aes(x=price_usd, 
+                               y=dollar_request, 
+                               color=as.factor(cpu_type),
+                               shape=as.factor(cpu_amount),
+                               label=VM_type)) + 
+  geom_point(size=5, stroke = 3)  +
+  scale_x_log10(breaks=x_breaks) +
+  scale_y_sqrt(breaks=y_breaks,
+               labels=label_number(suffix = " M", scale = 1e-6))  +
+  scale_shape_manual(values=1:nlevels(as.factor(temp_dt$cpu_amount)))+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1),
+        axis.text.y = element_text(angle = -45, vjust = 0.9, hjust=1, size=6)) +
+  scale_color_manual(name = 'color:\nCPU type', 
+                     values =c('Graviton'='darkgoldenrod1',
+                               'Intel'='dodgerblue',
+                               'AMD'='firebrick1'), 
+                     labels = c('Graviton','Intel', "AMD"))  +
+  labs(title = "CPU types efficient comparison (for MySQL)",
+       x="price for 1 hour USD",
+       y="Approximate amount of requests per 1 USD",
+       caption = "DUMMY",
+       color="color:\nCPU type:",
+       shape="shape:\nvCPU amount")  +
+  geom_text_repel(fill = "white", xlim = c(-Inf, Inf), ylim = c(-Inf, Inf))
+
+p_21_without_labels <- result_plot
+save_plot("021_cpu_efficiency_per_1_usd.png", p_21_without_labels)
+p_22_with_labels <- result_plot +
+  geom_text_repel(fill = "white", xlim = c(-Inf, Inf), ylim = c(-Inf, Inf))
+save_plot("022_cpu_efficiency_per_1_usd_with_labels.png", p_22_with_labels,input_width=12, input_height=7)
 
 
 
